@@ -1,0 +1,12 @@
+# Commands
+CMD	src 	cat test1.graph
+CMD	pass1	cat
+CMD	pass2	cat
+CMD	out1	head -n 1
+CMD	out2	tail -n 1
+
+# Edges
+EDGE src pass1
+EDGE src pass2
+EDGE pass1 out1
+EDGE pass2 out2

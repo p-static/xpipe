@@ -1,5 +1,0 @@
-src 	cat test1.graph
-pass1	cat
-pass2	cat
-out1	head -n 1
-out2	tail -n 1
