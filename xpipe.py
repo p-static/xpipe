@@ -34,7 +34,7 @@ class GraphNode:
 		return "(" + self.name + ": " + ",".join([ x.name for x in self.outputs ]) + ")"
 	
 	
-
+rm = """
 def parse_commands(f):
 	cmds_file = open(f)
 	line_pattern = re.compile(r"(\w+)\s+(.+)")
@@ -82,15 +82,47 @@ def parse_graph(f, cmds):
 				print "Error at line %d of graph file: nonexistent command %s" % (lineno, cmd)
 		
 	return graph
-
+"""
 
 ### Read input files
 
-# map of name to (stdin, stdout) tuples
-cmds = parse_commands(sys.argv[1])
+# map of command names to commands
+cmds = {}
 
-# list of (name, compiled pattern, name) tuples
-graph = parse_graph(sys.argv[2], cmds)
+# list of (name, name) tuples
+graph = []
+
+f = open(sys.argv[1])
+cmd_pattern = re.compile(r"CMD\s+(\w+)\s+(.*)\s*")
+edge_pattern = re.compile(r"EDGE\s+(\w+)\s+(\w+)\s*")
+comment_pattern = re.compile(r"\s*#.*")
+lineno = 0
+for line in f:
+	lineno += 1
+	
+	# skip blank lines
+	if line.strip() == "":
+		continue
+	
+	m = cmd_pattern.match(line)
+	if m:
+		name, command = m.groups()
+		cmds[name] = command
+		continue
+	
+	m = edge_pattern.match(line)
+	if m:
+		src, sink = m.groups()
+		graph.append((src, sink))
+		continue
+	
+	m = comment_pattern.match(line)
+	if m:
+		continue
+	
+	# if we get here, no patterns matched
+	print "Error on line %d: Invalid line" % lineno
+	sys.exit(1)
 
 
 ### Construct graph structure
@@ -101,7 +133,11 @@ for cmd in cmds:
 
 # second pass - fill in outputs with GraphNode objects
 for edge in graph:
-	cmds[edge[0]].outputs.append(cmds[edge[2]])
+	for cmd in edge[0], edge[1]:
+		if not cmd in cmds:
+			print "Invalid edge: Reference to nonexistent command " + cmd
+			sys.exit(1)
+	cmds[edge[0]].outputs.append(cmds[edge[1]])
 
 print cmds
 
