@@ -7,6 +7,7 @@ from select import select
 from subprocess import Popen, PIPE
 
 # XPipe prototype - might rewrite in C later to reduce memory overhead and dependencies
+# Making this a binary will also allow us to use #! in pipe files, and use them as programs themselves, which would be neat
 
 class GraphNodeStream:
 	def __init__(self, node, stream):	
@@ -33,56 +34,6 @@ class GraphNode:
 	def __repr__(self):
 		return "(" + self.name + ": " + ",".join([ x.name for x in self.outputs ]) + ")"
 	
-	
-rm = """
-def parse_commands(f):
-	cmds_file = open(f)
-	line_pattern = re.compile(r"(\w+)\s+(.+)")
-	lineno = 0
-	cmds = {}
-	for line in cmds_file:
-		lineno += 1
-		
-		# skip blank lines
-		if line.strip() == "":
-			continue
-		
-		# parse lines w/ a regex
-		m = line_pattern.match(line)
-		if not m:
-			print "Error at line %d of command file: %s" % (lineno, line)
-			continue
-		name, command = m.groups()
-		cmds[name] = command
-	
-	return cmds
-
-def parse_graph(f, cmds):
-	graph_file = open(sys.argv[2])
-	line_pattern = re.compile(r"(\w+)\s+/(.*)/\s+(\w+)")
-	lineno = 0
-	graph = []
-	for line in graph_file:
-		lineno += 1
-		
-		# skip blank lines
-		if line.strip() == "":
-			continue
-		
-		# parse lines w/ a regex
-		m = line_pattern.match(line)
-		if not m:
-			print "Error at line %d of graph file: %s" % (lineno, line)
-			continue
-		cmd1, regex, cmd2 = m.groups()
-		graph.append((cmd1, re.compile(regex), cmd2))
-		
-		for cmd in cmd1, cmd2:
-			if not cmd in cmds:
-				print "Error at line %d of graph file: nonexistent command %s" % (lineno, cmd)
-		
-	return graph
-"""
 
 ### Read input files
 
