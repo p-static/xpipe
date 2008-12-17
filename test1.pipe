@@ -1,12 +1,10 @@
 # Commands
-CMD	src 	cat test1.graph
-CMD	pass1	cat
-CMD	pass2	cat
-CMD	out1	head -n 1
-CMD	out2	tail -n 1
+CMD	src 	cat test1.pipe
+CMD	out1	head -n 3
+CMD	out2	tail -n 3
 
 # Edges
-EDGE src pass1
-EDGE src pass2
-EDGE pass1 out1
-EDGE pass2 out2
+EDGE src out1
+EDGE src out2
+EDGE out1 STDOUT
+EDGE out2 STDOUT
