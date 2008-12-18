@@ -14,7 +14,7 @@ import time
 # TODO: special STDIN and STDOUT commands, so we can handle them
 
 def debug_print(x):
-	print x
+	pass
 
 class GraphNodeStream:
 	def __init__(self, node, stream, name):	
@@ -137,6 +137,13 @@ for edge in graph:
 for cmd in cmds:
 	cmds[cmd].execute()
 
+def file_has_data(f):
+	r = select([f], [], [])
+	if len(r) is 1:
+		return True
+	else:
+		return False
+
 while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: this is kinda gross
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
 	w = [ cmds[x].stdin for x in cmds if cmds[x].is_writable() ]  # write to stdin streams
@@ -165,7 +172,7 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 	
 	dead = []
 	for cmd in cmds:
-		if not cmds[cmd].is_live():
+		if not (cmds[cmd].is_live() or file_has_data(cmds[cmd].stdout.stream)):
 			debug_print("!!! %s is no longer live!" % cmds[cmd])
 			dead.append(cmd)
 			
@@ -181,5 +188,5 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 				out.stdin.stream.close()
 		del cmds[process]
 	
-	time.sleep(1)
+	#time.sleep(1)
 	
