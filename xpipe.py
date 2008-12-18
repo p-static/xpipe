@@ -134,44 +134,49 @@ for edge in graph:
 for cmd in cmds:
 	cmds[cmd].execute()
 
-while len(cmds) > 0:
+while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: this is kinda gross
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
 	w = [ cmds[x].stdin for x in cmds if cmds[x].is_writable() ]  # write to stdin streams
 	x = r + w                                                     # dunno what should go in here :(
 	
 	r, w, x = select(r, w, x)
 	
-	print "SELECTED: ",
-	print r,w,x
+	#print "SELECTED: ",
+	#print r,w,x
 	
 	for readable in r:
-		print "trying " + str(readable)
+		#print "trying " + str(readable)
 		can_read = True
 		for out in readable.node.outputs:
-			print "   is " + str(out) + " writable?"
+			#print "   is " + str(out) + " writable?"
 			if out.stdin not in w:
-				print str(out) + " is not writable, skipping " + str(readable)
+				#print str(out) + " is not writable, skipping " + str(readable)
 				can_read = False
 		
 		if can_read:
-			print "   can read!"
+			#print "   can read!"
 			data = readable.stream.read(65536)
-			print "   read data from " + str(readable.node) + ": " + data
+			#print "   read data from " + str(readable.node) + ": " + data
 			for out in readable.node.outputs:
 				out.stdin.stream.write(data)
-				print "   wrote data to " + str(out)
+				#print "   wrote data to " + str(out)
 	
 	dead = []
 	for cmd in cmds:
 		if not cmds[cmd].is_live():
-			print "!!! %s is no longer live!" % cmds[cmd]
+			#print "!!! %s is no longer live!" % cmds[cmd]
 			dead.append(cmd)
+			
+		# FIXME: I believe there's a race condition hidden here, if a process exits right about here
+		
 		for out in cmds[cmd].outputs:
 			if not out.is_live():
 				cmds[cmd].outputs.remove(out)
+	
 	for process in dead:
 		for out in cmds[process].outputs:
-			out.stdin.stream.close()
+			if out is not fake_stdout:
+				out.stdin.stream.close()
 		del cmds[process]
 	
 	time.sleep(1)
