@@ -170,6 +170,8 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 			debug_print("   can read!")
 			data = readable.stream.read(65536)
 			
+			# FIXME: possible race condition if the process writes more data and then dies right here
+			
 			if data == "" and (not readable.node.is_live()):
 				cleanup_process(readable.node.name)
 				continue
