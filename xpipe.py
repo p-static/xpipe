@@ -137,12 +137,16 @@ for edge in graph:
 for cmd in cmds:
 	cmds[cmd].execute()
 
-def file_has_data(f):
-	r = select([f], [], [])
-	if len(r) is 1:
-		return True
-	else:
-		return False
+def cleanup_process(cmd):
+	for out in cmds[cmd].outputs:
+		if out is not fake_stdout:
+			out.stdin.stream.close()
+	
+	for x in cmds:
+		if cmds[cmd] in cmds[x].outputs:
+			cmds[x].outputs.remove(cmds[cmd])
+	
+	del cmds[cmd]
 
 while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: this is kinda gross
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
@@ -165,28 +169,16 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 		if can_read:
 			debug_print("   can read!")
 			data = readable.stream.read(65536)
+			
+			if data == "" and (not readable.node.is_live()):
+				cleanup_process(readable.node.name)
+				continue
+			
 			debug_print("   read data from " + str(readable.node) + ": " + data)
 			for out in readable.node.outputs:
 				out.stdin.stream.write(data)
 				debug_print("   wrote data to " + str(out))
 	
-	dead = []
-	for cmd in cmds:
-		if not (cmds[cmd].is_live() or file_has_data(cmds[cmd].stdout.stream)):
-			debug_print("!!! %s is no longer live!" % cmds[cmd])
-			dead.append(cmd)
-			
-		# FIXME: I believe there's a race condition hidden here, if a process exits right about here
-		
-		for out in cmds[cmd].outputs:
-			if not out.is_live():
-				cmds[cmd].outputs.remove(out)
-	
-	for process in dead:
-		for out in cmds[process].outputs:
-			if out is not fake_stdout:
-				out.stdin.stream.close()
-		del cmds[process]
 	
 	#time.sleep(1)
 	

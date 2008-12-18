@@ -1,10 +1,12 @@
 # Commands
 CMD	src 	cat test1.pipe
-CMD	out1	head -n 3
-CMD	out2	tail -n 3
+CMD pass	cat
+CMD	out1	head -n 1
+CMD	out2	tail -n 1
 
 # Edges
-EDGE src out1
+EDGE src pass
 EDGE src out2
+EDGE pass out1
 EDGE out1 STDOUT
 EDGE out2 STDOUT
