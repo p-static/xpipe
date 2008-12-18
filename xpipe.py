@@ -13,6 +13,9 @@ import time
 
 # TODO: special STDIN and STDOUT commands, so we can handle them
 
+def debug_print(x):
+	print x
+
 class GraphNodeStream:
 	def __init__(self, node, stream, name):	
 		self.node = node
@@ -141,30 +144,29 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 	
 	r, w, x = select(r, w, x)
 	
-	#print "SELECTED: ",
-	#print r,w,x
+	debug_print("SELECTED: " + str(r) + str(w) + str(x))
 	
 	for readable in r:
-		#print "trying " + str(readable)
+		debug_print("trying " + str(readable))
 		can_read = True
 		for out in readable.node.outputs:
-			#print "   is " + str(out) + " writable?"
+			debug_print("   is " + str(out) + " writable?")
 			if out.stdin not in w:
-				#print str(out) + " is not writable, skipping " + str(readable)
+				debug_print(str(out) + " is not writable, skipping " + str(readable))
 				can_read = False
 		
 		if can_read:
-			#print "   can read!"
+			debug_print("   can read!")
 			data = readable.stream.read(65536)
-			#print "   read data from " + str(readable.node) + ": " + data
+			debug_print("   read data from " + str(readable.node) + ": " + data)
 			for out in readable.node.outputs:
 				out.stdin.stream.write(data)
-				#print "   wrote data to " + str(out)
+				debug_print("   wrote data to " + str(out))
 	
 	dead = []
 	for cmd in cmds:
 		if not cmds[cmd].is_live():
-			#print "!!! %s is no longer live!" % cmds[cmd]
+			debug_print("!!! %s is no longer live!" % cmds[cmd])
 			dead.append(cmd)
 			
 		# FIXME: I believe there's a race condition hidden here, if a process exits right about here
