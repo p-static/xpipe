@@ -161,7 +161,9 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 	
 	debug_print("AVAILABLE: " + str(r) + str(w) + str(x))
 	
-	r, w, x = select(r, w, x)
+	# split readable and writable, since we can't do anything unless we have both
+	r, meh, x = select(r, [], [])
+	meh, w, x = select([], w, x)
 	
 	debug_print("SELECTED: " + str(r) + str(w) + str(x))
 	
