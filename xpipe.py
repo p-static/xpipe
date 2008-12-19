@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import fcntl
 import sys
 import re
 from select import select
@@ -15,6 +16,11 @@ import time
 
 def debug_print(x):
 	pass
+
+# make stdin nonblocking
+fd = sys.stdin.fileno()
+fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
 class GraphNodeStream:
 	def __init__(self, node, stream, name):	
@@ -152,6 +158,8 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
 	w = [ cmds[x].stdin for x in cmds if cmds[x].is_writable() ]  # write to stdin streams
 	x = r + w                                                     # dunno what should go in here :(
+	
+	debug_print("AVAILABLE: " + str(r) + str(w) + str(x))
 	
 	r, w, x = select(r, w, x)
 	
