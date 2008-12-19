@@ -1,0 +1,4 @@
+CMD command grep test
+
+EDGE STDIN command
+EDGE command STDOUT
