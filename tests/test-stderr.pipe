@@ -1,0 +1,3 @@
+CMD err ./test-stderr.sh
+
+EDGE err STDOUT
