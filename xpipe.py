@@ -133,7 +133,7 @@ fake_stdin.stdin  = GraphNodeStream(fake_stdin, None, 'stdin')
 fake_stdin.stdout = GraphNodeStream(fake_stdin, sys.stdin, 'stdout')
 cmds['STDIN'] = fake_stdin
 
-# second pass - fill in outputs with GraphNode objects
+# second pass - fill in output lists with GraphNode objects
 for edge in graph:
 	for cmd in edge[0], edge[1]:
 		if not cmd in cmds:
@@ -160,7 +160,7 @@ def cleanup_process(cmd):
 	
 	del cmds[cmd]
 
-while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: this is kinda gross
+while [ c for c in cmds if cmds[c].process is not None ]:
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
 	w = [ cmds[x].stdin for x in cmds if cmds[x].is_writable() ]  # write to stdin streams
 	
@@ -187,7 +187,7 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 			
 			# FIXME: possible race condition if the process writes more data and then dies right here
 			
-			if data == "" and (not readable.node.is_live()):
+			if data == "" and (readable.node is fake_stdin or not readable.node.is_live()):
 				cleanup_process(readable.node.name)
 				continue
 			
