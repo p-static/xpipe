@@ -1,4 +1,4 @@
-CMD command grep test
+CMD command grep --line-buffered test
 
 EDGE STDIN STDOUT
 EDGE STDIN command
