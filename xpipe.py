@@ -52,8 +52,8 @@ class GraphNode:
 	def execute(self):
 		if self.command is not None:
 			self.process = Popen(self.command, shell=True, stdin=PIPE, stdout=PIPE, stderr=None)
-			make_nonblocking(self.process.stdout)
-			make_nonblocking(self.process.stdin)
+			make_nonblocking(self.process.stdout.fileno())
+			make_nonblocking(self.process.stdin.fileno())
 			self.stdin = GraphNodeStream(self, self.process.stdin, 'stdin')
 			self.stdout = GraphNodeStream(self, self.process.stdout, 'stdout')
 	
