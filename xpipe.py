@@ -17,10 +17,13 @@ import time
 def debug_print(x):
 	pass
 
+def make_nonblocking(fd):
+	fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+	fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
 # make stdin nonblocking
-fd = sys.stdin.fileno()
-fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+make_nonblocking(sys.stdin.fileno())
+make_nonblocking(sys.stdout.fileno())
 
 class GraphNodeStream:
 	def __init__(self, node, stream, name):	
@@ -49,9 +52,12 @@ class GraphNode:
 	def execute(self):
 		if self.command is not None:
 			self.process = Popen(self.command, shell=True, stdin=PIPE, stdout=PIPE, stderr=None)
+			make_nonblocking(self.process.stdout)
+			make_nonblocking(self.process.stdin)
 			self.stdin = GraphNodeStream(self, self.process.stdin, 'stdin')
 			self.stdout = GraphNodeStream(self, self.process.stdout, 'stdout')
 	
+	# Returns False iff this node will never produce more data
 	def is_live(self):
 		if self.process is not None:
 			self.process.poll()
@@ -157,13 +163,12 @@ def cleanup_process(cmd):
 while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: this is kinda gross
 	r = [ cmds[x].stdout for x in cmds if cmds[x].is_readable() ] # read from stdout streams
 	w = [ cmds[x].stdin for x in cmds if cmds[x].is_writable() ]  # write to stdin streams
-	x = r + w                                                     # dunno what should go in here :(
 	
 	debug_print("AVAILABLE: " + str(r) + str(w) + str(x))
 	
 	# split readable and writable, since we can't do anything unless we have both
 	r, meh, x = select(r, [], [])
-	meh, w, x = select([], w, x)
+	meh, w, x = select([], w, [])
 	
 	debug_print("SELECTED: " + str(r) + str(w) + str(x))
 	
@@ -189,6 +194,7 @@ while len(cmds) > 2: # 2, because std[in,out] will always be in there # FIXME: t
 			debug_print("   read data from " + str(readable.node) + ": " + data)
 			for out in readable.node.outputs:
 				out.stdin.stream.write(data)
+				out.stdin.stream.flush()
 				debug_print("   wrote data to " + str(out))
 	
 	
