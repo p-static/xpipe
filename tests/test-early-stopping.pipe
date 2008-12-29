@@ -1,0 +1,4 @@
+CMD gen cat xpipe.py
+CMD sleep sleep 30s
+
+EDGE gen sleep

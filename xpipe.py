@@ -166,7 +166,9 @@ while [ c for c in cmds if cmds[c].process is not None ]:
 	
 	debug_print("AVAILABLE: " + str(r) + str(w) + str(x))
 	
-	# split readable and writable, since we can't do anything unless we have both
+	# split readable and writable, since we can't act unless we have both
+	# FIXME: this isn't quite right; if there's a readable process, and a 
+	# writable process, that aren't connected, then this will spin
 	r, meh, x = select(r, [], [])
 	meh, w, x = select([], w, [])
 	
@@ -188,6 +190,7 @@ while [ c for c in cmds if cmds[c].process is not None ]:
 			# FIXME: possible race condition if the process writes more data and then dies right here
 			
 			if data == "" and (readable.node is fake_stdin or not readable.node.is_live()):
+				debug_print(str(readable.node) + " is done, cleaning up")
 				cleanup_process(readable.node.name)
 				continue
 			
